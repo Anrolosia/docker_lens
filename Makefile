@@ -13,9 +13,9 @@
 #    make bump-patch    1.0.0 -> 1.0.1  (bug fix)
 #    make bump-minor    1.0.0 -> 1.1.0  (new feature)
 #    make bump-major    1.0.0 -> 2.0.0  (breaking change)
-#    make release       lint + build + bump-patch + tag + push
-#    make release-minor lint + build + bump-minor + tag + push
-#    make release-major lint + build + bump-major + tag + push
+#    make release       lint + bump-patch + tag + push  (CI builds the zip)
+#    make release-minor lint + bump-minor + tag + push
+#    make release-major lint + bump-major + tag + push
 
 .DEFAULT_GOAL := help
 
@@ -41,9 +41,9 @@ help:
 	@echo "  make bump-minor     x.Y+1.0  -- new feature"
 	@echo "  make bump-major     X+1.0.0  -- breaking change"
 	@echo ""
-	@echo "  make release        lint -> build -> bump-patch -> tag -> push"
-	@echo "  make release-minor  lint -> build -> bump-minor -> tag -> push"
-	@echo "  make release-major  lint -> build -> bump-major -> tag -> push"
+	@echo "  make release        lint -> bump-patch -> tag -> push"
+	@echo "  make release-minor  lint -> bump-minor -> tag -> push"
+	@echo "  make release-major  lint -> bump-major -> tag -> push"
 	@echo ""
 
 # ── Dependencies ─────────────────────────────────────────────
@@ -140,30 +140,30 @@ print('Bumped to ' + m['version'])"
 # ── Release ──────────────────────────────────────────────────
 
 .PHONY: release
-release: lint build bump-patch
+release: lint bump-patch
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
-	git add $(MANIFEST) $(COMPONENT)/frontend/dist/
+	git add $(MANIFEST)
 	git commit -m "chore: release v$(VER)"
 	git tag -a "v$(VER)" -m "Release v$(VER)"
 	git push && git push --tags
 	@echo "Released v$(VER)"
 
 .PHONY: release-minor
-release-minor: lint build bump-minor
+release-minor: lint bump-minor
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
-	git add $(MANIFEST) $(COMPONENT)/frontend/dist/
+	git add $(MANIFEST)
 	git commit -m "chore: release v$(VER)"
 	git tag -a "v$(VER)" -m "Release v$(VER)"
 	git push && git push --tags
 	@echo "Released v$(VER)"
 
 .PHONY: release-major
-release-major: lint build bump-major
+release-major: lint bump-major
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
-	git add $(MANIFEST) $(COMPONENT)/frontend/dist/
+	git add $(MANIFEST)
 	git commit -m "chore: release v$(VER)"
 	git tag -a "v$(VER)" -m "Release v$(VER)"
 	git push && git push --tags
