@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Docker Lens Setup",
+        "description": "Configure the connection to your Docker daemon. Use `unix:///var/run/docker.sock` for a local socket, or `tcp://192.168.1.x:2375` / `tcp://192.168.1.x:2376` (TLS) for a remote host.",
+        "data": {
+          "docker_host": "Docker Host URL",
+          "tls_verify": "Enable TLS",
+          "tls_ca_cert": "CA Certificate path",
+          "tls_client_cert": "Client Certificate path",
+          "tls_client_key": "Client Key path"
+        },
+        "data_description": {
+          "docker_host": "URL of the Docker daemon socket or TCP endpoint.",
+          "tls_ca_cert": "Absolute path on the host, e.g. `/config/docker-certs/ca.pem`.",
+          "tls_client_cert": "Absolute path on the host, e.g. `/config/docker-certs/cert.pem`.",
+          "tls_client_key": "Absolute path on the host, e.g. `/config/docker-certs/key.pem`."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Docker daemon. Verify the host URL, firewall rules, and that the Docker daemon exposes a TCP socket on the remote machine."
+    },
+    "abort": {
+      "already_configured": "Docker Lens is already configured. Only one instance is supported."
+    }
+  }
+}

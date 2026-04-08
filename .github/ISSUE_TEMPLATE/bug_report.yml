@@ -1,0 +1,64 @@
+name: Bug report
+description: Report something that is not working correctly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug!
+        Before submitting, please check that no existing issue already covers the problem.
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "e.g. 2024.6.2"
+    validations:
+      required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: Docker Lens version
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: docker_setup
+    attributes:
+      label: Docker connection type
+      options:
+        - Local socket (unix:///var/run/docker.sock)
+        - Remote TCP (no TLS)
+        - Remote TCP (with TLS)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Home Assistant logs
+      description: |
+        Enable debug logging by adding to your `configuration.yaml`:
+        ```yaml
+        logger:
+          logs:
+            custom_components.docker_lens: debug
+        ```
+      render: text

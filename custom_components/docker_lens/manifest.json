@@ -1,0 +1,19 @@
+{
+  "domain": "docker_lens",
+  "name": "Docker Lens",
+  "codeowners": [
+    "@Anrolosia"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
+  "documentation": "https://github.com/Anrolosia/docker_lens",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Anrolosia/docker_lens/issues",
+  "requirements": [
+    "docker==7.1.0"
+  ],
+  "version": "1.0.0"
+}

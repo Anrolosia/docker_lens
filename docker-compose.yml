@@ -1,0 +1,37 @@
+services:
+  homeassistant:
+    container_name: docker_lens_ha_dev
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      - ha-config:/config
+      - ./custom_components/docker_lens:/config/custom_components/docker_lens
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8123:8123"
+    environment:
+      - TZ=${TZ:-America/Toronto}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  frontend:
+    container_name: docker_lens_frontend_dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host
+    restart: unless-stopped
+    depends_on:
+      homeassistant:
+        condition: service_healthy
+
+volumes:
+  ha-config:

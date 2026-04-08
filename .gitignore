@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+dist/
+*.egg-info/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local development environment
+ha-config/
+.env
+*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+# Exception: built frontend must be committed so HACS can serve it
+!custom_components/docker_lens/frontend/dist/
+!custom_components/docker_lens/frontend/dist/**
+frontend/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
