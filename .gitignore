@@ -28,9 +28,6 @@ frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/coverage/
-# Exception: built frontend must be committed so HACS can serve it
-!custom_components/docker_lens/frontend/dist/
-!custom_components/docker_lens/frontend/dist/**
 frontend/.vite/
 
 # OS
