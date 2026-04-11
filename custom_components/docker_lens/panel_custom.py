@@ -1,7 +1,3 @@
-"""Register the custom frontend panel for Docker Lens."""
-
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 
@@ -30,11 +26,13 @@ async def async_setup(hass: HomeAssistant) -> None:
         )
         return
 
+    version_file = frontend_dir / "version.txt"
+    cache_buster = await hass.async_add_executor_job(_read_version_file, version_file)
+
     await hass.http.async_register_static_paths(
         [http.StaticPathConfig(_STATIC_URL, str(frontend_dir), cache_headers=False)]
     )
 
-    # Guard against double-registration during a reload.
     if PANEL_URL in hass.data.get("frontend_panels", {}):
         return
 
@@ -47,10 +45,18 @@ async def async_setup(hass: HomeAssistant) -> None:
         config={
             "_panel_custom": {
                 "name": "ha-docker-lens-panel",
-                "js_url": f"{_STATIC_URL}/index.js",
+                # On applique le cache buster généré par Vite
+                "js_url": f"{_STATIC_URL}/index.js?v={cache_buster}",
                 "embed_iframe": False,
-                "trust_external_script": True,
+                "trust_external": False,
             }
         },
-        require_admin=True,
     )
+
+
+def _read_version_file(file_path: Path) -> str:
+    """Read the cache buster version file synchronously."""
+    if file_path.is_file():
+        with open(file_path, encoding="utf-8") as f:
+            return f.read().strip()
+    return "1"

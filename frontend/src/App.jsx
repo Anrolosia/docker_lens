@@ -158,7 +158,7 @@ export function App({ connection }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          height: '100vh',
+          height: '100%',
         }}
       >
         <Typography color="error">{containersError}</Typography>
@@ -167,9 +167,22 @@ export function App({ connection }) {
   }
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2 }, height: '100vh', boxSizing: 'border-box' }}>
-      <Grid container spacing={2} sx={{ height: '100%' }}>
-        <Grid item xs={12} md={4} lg={3} sx={{ height: { xs: '40%', md: '100%' } }}>
+    <Box sx={{ p: { xs: 1, sm: 2 }, height: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          height: '100%',
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: { xs: '100%', md: '25%' },
+            height: { xs: '40%', md: '100%' },
+            flexShrink: 0,
+          }}
+        >
           <Paper
             sx={{
               height: '100%',
@@ -187,8 +200,11 @@ export function App({ connection }) {
               isLoading={containersLoading}
             />
           </Paper>
-        </Grid>
-        <Grid item xs={12} md={8} lg={9} sx={{ height: { xs: '60%', md: '100%' } }}>
+        </Box>
+
+        <Box
+          sx={{ width: { xs: '100%', md: '75%' }, height: { xs: '60%', md: '100%' }, flexGrow: 1 }}
+        >
           <LogViewer
             logs={logs}
             containerName={viewTitle}
@@ -196,8 +212,8 @@ export function App({ connection }) {
             onFilterChange={setFilterText}
             onClearLogs={handleClearLogs}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 }
