@@ -1,6 +1,4 @@
 {
   "name": "Docker Lens",
-  "render_readme": true,
-  "zip_release": true,
-  "filename": "docker_lens.zip"
+  "render_readme": true
 }

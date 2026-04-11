@@ -29,6 +29,9 @@ frontend/dist/
 frontend/build/
 frontend/coverage/
 frontend/.vite/
+# Exception: built frontend must be committed for HACS
+!custom_components/docker_lens/frontend/dist/
+!custom_components/docker_lens/frontend/dist/**
 
 # OS
 .DS_Store
