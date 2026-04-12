@@ -145,3 +145,104 @@ class DockerAPI:
             if producer_task is not None and not producer_task.done():
                 producer_task.cancel()
                 _LOGGER.debug("Cancelled producer task for %s", container_id)
+
+    async def container_action(
+        self,
+        container_id: str,
+        action: str,
+    ) -> dict[str, str]:
+        """Perform start/stop/restart on a container.
+
+        Returns a dict with ``ok`` (bool) and optionally ``error`` (str).
+        """
+        _LOGGER.debug("Container action %s on %s", action, container_id)
+        valid_actions = {"start", "stop", "restart"}
+        if action not in valid_actions:
+            return {"ok": False, "error": f"Unknown action: {action}"}
+        try:
+            container: Container = await self.hass.async_add_executor_job(
+                self.client.containers.get, container_id
+            )
+            fn = getattr(container, action)
+            await self.hass.async_add_executor_job(fn)
+        except NotFound:
+            return {"ok": False, "error": f"Container {container_id} not found."}
+        except DockerException as exc:
+            _LOGGER.exception("Action %s failed for %s", action, container_id)
+            return {"ok": False, "error": str(exc)}
+        else:
+            return {"ok": True}
+
+    async def get_container_stats(self, container_id: str) -> dict:
+        """Return a single stats snapshot for a container.
+
+        Returns CPU%, memory usage/limit/%, and network rx/tx bytes.
+        """
+        try:
+            container: Container = await self.hass.async_add_executor_job(
+                self.client.containers.get, container_id
+            )
+            raw: dict = await self.hass.async_add_executor_job(
+                lambda: container.stats(stream=False)
+            )
+        except NotFound:
+            return {"error": f"Container {container_id} not found."}
+        except DockerException:
+            _LOGGER.exception("Failed to get stats for %s", container_id)
+            return {"error": "Failed to get container stats."}
+
+        return _parse_stats(raw)
+
+
+def _parse_stats(raw: dict) -> dict:
+    """Parse a raw Docker stats dict into a simplified structure."""
+    # CPU %
+    cpu_pct = 0.0
+    try:
+        cpu_delta = (
+            raw["cpu_stats"]["cpu_usage"]["total_usage"]
+            - raw["precpu_stats"]["cpu_usage"]["total_usage"]
+        )
+        sys_delta = (
+            raw["cpu_stats"]["system_cpu_usage"]
+            - raw["precpu_stats"]["system_cpu_usage"]
+        )
+        cpus = raw["cpu_stats"].get("online_cpus") or len(
+            raw["cpu_stats"]["cpu_usage"].get("percpu_usage", [1])
+        )
+        if sys_delta > 0:
+            cpu_pct = round((cpu_delta / sys_delta) * cpus * 100, 2)
+    except (KeyError, TypeError, ZeroDivisionError):
+        pass
+
+    # Memory
+    mem_usage = 0
+    mem_limit = 0
+    mem_pct = 0.0
+    try:
+        cache = raw["memory_stats"].get("stats", {}).get("cache", 0)
+        mem_usage = raw["memory_stats"]["usage"] - cache
+        mem_limit = raw["memory_stats"]["limit"]
+        if mem_limit > 0:
+            mem_pct = round((mem_usage / mem_limit) * 100, 2)
+    except (KeyError, TypeError):
+        pass
+
+    # Network
+    net_rx = 0
+    net_tx = 0
+    try:
+        for iface in raw.get("networks", {}).values():
+            net_rx += iface.get("rx_bytes", 0)
+            net_tx += iface.get("tx_bytes", 0)
+    except (KeyError, TypeError):
+        pass
+
+    return {
+        "cpu_pct": cpu_pct,
+        "mem_usage": mem_usage,
+        "mem_limit": mem_limit,
+        "mem_pct": mem_pct,
+        "net_rx": net_rx,
+        "net_tx": net_tx,
+    }

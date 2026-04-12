@@ -1,20 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Box, Grid, CircularProgress, Typography, Paper } from '@mui/material';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Box, CircularProgress, Typography, Paper } from '@mui/material';
 
 import { fetchContainers, subscribeToLogs } from './api/websocket';
 import ContainerList from './components/ContainerList';
 import LogViewer from './components/LogViewer';
+import ContainerStats from './components/ContainerStats';
 
-/**
- * Main application component.
- * @param {{ connection: object }} props - The HA WebSocket connection.
- */
 export function App({ connection }) {
   const [containers, setContainers] = useState({});
   const [containersLoading, setContainersLoading] = useState(true);
   const [containersError, setContainersError] = useState(null);
+  const loadContainersRef = useRef(null);
 
-  // selection: null | { type: 'single', containerId } | { type: 'merged', stackName }
   const [selection, setSelection] = useState(null);
   const [logs, setLogs] = useState([]);
   const [filterText, setFilterText] = useState('');
@@ -22,7 +19,6 @@ export function App({ connection }) {
   // ── Container list ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!connection) return;
-
     let cancelled = false;
 
     const loadContainers = async () => {
@@ -42,16 +38,20 @@ export function App({ connection }) {
       }
     };
 
+    loadContainersRef.current = loadContainers;
     loadContainers();
     return () => {
       cancelled = true;
     };
   }, [connection]);
 
+  const handleRefresh = useCallback(() => {
+    if (loadContainersRef.current) loadContainersRef.current();
+  }, []);
+
   // ── Log subscription ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!selection || !connection) return;
-
     setLogs([]);
     setFilterText('');
 
@@ -82,9 +82,7 @@ export function App({ connection }) {
             } catch {
               /* ignore */
             }
-          } else {
-            resolvedUnsubs.push(unsub);
-          }
+          } else resolvedUnsubs.push(unsub);
         })
         .catch(console.error);
 
@@ -137,14 +135,7 @@ export function App({ connection }) {
   // ── Render ──────────────────────────────────────────────────────────────────
   if (!connection) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Connecting to Home Assistant…</Typography>
       </Box>
@@ -153,14 +144,7 @@ export function App({ connection }) {
 
   if (containersError) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100%',
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <Typography color="error">{containersError}</Typography>
       </Box>
     );
@@ -169,13 +153,9 @@ export function App({ connection }) {
   return (
     <Box sx={{ p: { xs: 1, sm: 2 }, height: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
       <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          height: '100%',
-          gap: 2,
-        }}
+        sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: '100%', gap: 2 }}
       >
+        {/* ── Left: container list ── */}
         <Box
           sx={{
             width: { xs: '100%', md: '25%' },
@@ -184,12 +164,7 @@ export function App({ connection }) {
           }}
         >
           <Paper
-            sx={{
-              height: '100%',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
           >
             <ContainerList
               containers={containers}
@@ -197,21 +172,37 @@ export function App({ connection }) {
               selectedStackName={selectedStackName}
               onContainerSelect={handleContainerSelect}
               onMergeStack={handleMergeStack}
+              onRefresh={handleRefresh}
               isLoading={containersLoading}
+              connection={connection}
             />
           </Paper>
         </Box>
 
+        {/* ── Right: stats + logs ── */}
         <Box
-          sx={{ width: { xs: '100%', md: '75%' }, height: { xs: '60%', md: '100%' }, flexGrow: 1 }}
+          sx={{
+            width: { xs: '100%', md: '75%' },
+            height: { xs: '60%', md: '100%' },
+            flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 0,
+            overflow: 'hidden',
+          }}
         >
-          <LogViewer
-            logs={logs}
-            containerName={viewTitle}
-            filterText={filterText}
-            onFilterChange={setFilterText}
-            onClearLogs={handleClearLogs}
-          />
+          {selectedContainerId && (
+            <ContainerStats containerId={selectedContainerId} connection={connection} />
+          )}
+          <Box sx={{ flexGrow: 1, minHeight: 0, height: 0, overflow: 'hidden' }}>
+            <LogViewer
+              logs={logs}
+              containerName={viewTitle}
+              filterText={filterText}
+              onFilterChange={setFilterText}
+              onClearLogs={handleClearLogs}
+            />
+          </Box>
         </Box>
       </Box>
     </Box>

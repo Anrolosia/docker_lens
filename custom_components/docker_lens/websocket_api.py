@@ -27,6 +27,8 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
     _LOGGER.debug("Registering Docker Lens WebSocket commands")
     websocket_api.async_register_command(hass, ws_list_containers)
     websocket_api.async_register_command(hass, ws_subscribe_logs)
+    websocket_api.async_register_command(hass, ws_container_action)
+    websocket_api.async_register_command(hass, ws_container_stats)
 
 
 def _get_api(hass: HomeAssistant) -> DockerAPI | None:
@@ -109,6 +111,78 @@ async def ws_subscribe_logs(
     def _cleanup() -> None:
         """Cancel the streaming task when the client unsubscribes."""
         _LOGGER.debug("Client unsubscribed from logs for %s", container_id)
+        task.cancel()
+
+    connection.subscriptions[msg["id"]] = _cleanup
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/container/action",
+        vol.Required("container_id"): cv.string,
+        vol.Required("action"): vol.In(["start", "stop", "restart"]),
+    }
+)
+@websocket_api.async_response
+async def ws_container_action(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle a container start/stop/restart request."""
+    if (api := _get_api(hass)) is None:
+        connection.send_error(msg["id"], "not_setup", "Integration not set up.")
+        return
+
+    result = await api.container_action(msg["container_id"], msg["action"])
+
+    if result["ok"]:
+        connection.send_result(msg["id"], result)
+    else:
+        error_msg = result.get("error", "Unknown error.")
+        connection.send_error(msg["id"], "action_failed", error_msg)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/container/stats",
+        vol.Required("container_id"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_container_stats(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Stream container stats, sending an update every 2 seconds."""
+    if (api := _get_api(hass)) is None:
+        connection.send_error(msg["id"], "not_setup", "Integration not set up.")
+        return
+
+    container_id: str = msg["container_id"]
+
+    async def _stream_stats() -> None:
+        try:
+            while True:
+                stats = await api.get_container_stats(container_id)
+                if "error" in stats:
+                    connection.send_message(
+                        websocket_api.event_message(
+                            msg["id"], {"error": stats["error"]}
+                        )
+                    )
+                    break
+                connection.send_message(websocket_api.event_message(msg["id"], stats))
+                await asyncio.sleep(2)
+        except asyncio.CancelledError:
+            pass
+
+    task = asyncio.create_task(_stream_stats())
+
+    @callback
+    def _cleanup() -> None:
         task.cancel()
 
     connection.subscriptions[msg["id"]] = _cleanup
