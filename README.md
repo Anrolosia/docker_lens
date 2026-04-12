@@ -22,7 +22,15 @@ Docker Lens was built to close that gap: bring Dozzle-style real-time log stream
 - **Stack grouping** — containers are organized by their Docker Compose project (`com.docker.compose.project` label).
 - **Merged-stack view** — stream all containers in a stack into a single merged view, each line color-coded by container name.
 - **Log-level coloring** — lines are automatically classified and colored (`ERR`, `WRN`, `INF`, `DBG`, `TRC`).
+- **JSON log detection** — JSON lines are automatically detected, the message extracted, and all fields viewable via an expandable panel.
+- **Logfmt detection** — `key=value` log lines are colorized with keys in purple and values in green.
+- **Timestamp grouping** — lines sharing the same timestamp are grouped visually, with the timestamp and level indicator shown only once.
+- **Multiline grouping** — stack traces (Python, Java, generic indented lines) are automatically grouped and collapsible.
+- **Sidebar search** — filter containers and stacks by name in real time.
 - **Regex filtering** — filter logs in real time by plain text or regular expression.
+- **Auto-scroll toggle** — auto-scroll pauses when you scroll up manually and resumes with one click.
+- **Container actions** — start, stop, and restart containers directly from the sidebar (requires additional socket proxy permissions — see [Container Actions](#container-actions)).
+- **Real-time container stats** — CPU%, memory usage, and network RX/TX streamed live every 2 seconds when a container is selected.
 - **Local and remote Docker** — works with a local Unix socket or a remote TCP daemon (plain or TLS).
 - **Adaptive theme** — follows the Home Assistant light / dark mode automatically.
 - **Stateless** — no logs are stored; they are streamed directly from the Docker daemon.
@@ -36,7 +44,7 @@ Docker Lens was built to close that gap: bring Dozzle-style real-time log stream
   - **Local** — Docker on the same host with the socket mounted (`/var/run/docker.sock`)
   - **Remote** — Docker exposed over TCP on another machine (e.g. `tcp://192.168.1.x:2375`), optionally with TLS
 
-> **Security tip:** For remote access, consider using a read-only proxy such as [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy) instead of exposing the raw Docker socket over TCP.
+> **Security tip:** For remote access, use a proxy such as [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy) instead of exposing the raw Docker socket over TCP. See [Container Actions](#container-actions) for the required configuration when using a socket proxy.
 
 ---
 
@@ -89,11 +97,53 @@ Once added, a **Docker Lens** entry appears in your sidebar.
 ## Usage
 
 1. Click **Docker Lens** in the Home Assistant sidebar.
-2. The left panel shows your Docker stacks. Expand a stack to see its containers.
-3. Click a container name to start streaming its logs in real time.
-4. Click the **stack icon** (⊞) next to a stack name to merge all containers into a single log view.
-5. Use the **filter bar** to search by plain text or regular expression.
-6. Click **Clear** to wipe the current log buffer.
+2. The left panel lists your Docker stacks and containers. Use the **search bar** at the top to filter by name.
+3. Click a container name to start streaming its logs and view its real-time stats (CPU, memory, network).
+4. Click the **stack icon** (⊞) next to a stack name to merge all containers in that stack into a single log view.
+5. Use the **filter bar** to search logs by plain text or regular expression.
+6. Use the **auto-scroll button** (⬇) in the toolbar to pause or resume automatic scrolling.
+7. Click the **⋮ menu** next to any container to start, stop, or restart it.
+8. Click **Clear** to wipe the current log buffer.
+
+### Log formats
+
+Docker Lens automatically detects and renders the following log formats:
+
+| Format | Detection | Display |
+|--------|-----------|---------|
+| **Plain text** | Default | Level dot + message |
+| **JSON** | Line contains a `{...}` object | `JSON` badge, message extracted, click to expand all fields |
+| **Logfmt** | Line contains ≥ 2 `key=value` pairs | `FMT` badge, keys in purple, values in green |
+
+---
+
+## Container Actions
+
+The start, stop, and restart buttons require write access to the Docker API.
+
+If you connect directly to the Docker socket (`unix:///var/run/docker.sock`) or a raw TCP daemon, actions work out of the box.
+
+If you use [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy), you must add the following variables to your proxy configuration:
+
+```yaml
+socket-proxy:
+  image: tecnativa/docker-socket-proxy:latest
+  environment:
+    - DISABLE_DEFAULT=1
+    # Read access — required for log streaming and stats
+    - PING=1
+    - VERSION=1
+    - INFO=1
+    - CONTAINERS=1
+    - EVENTS=1
+    # Write access — required for start/stop/restart actions
+    - POST=1          # Master switch for all write operations — required
+    - ALLOW_START=1
+    - ALLOW_STOP=1
+    - ALLOW_RESTARTS=1
+```
+
+> **Important:** `POST=1` is the master switch for all HTTP POST requests to the Docker API. Without it, `ALLOW_START`, `ALLOW_STOP`, and `ALLOW_RESTARTS` have no effect and all container actions will return a `403 Forbidden` error.
 
 ---
 
@@ -144,6 +194,7 @@ pytest tests/
 | Panel shows "Failed to fetch containers" | HA cannot reach the Docker daemon — check the host URL and that the socket/port is exposed. |
 | No containers listed | The Docker daemon is reachable but has no running or stopped containers. |
 | Logs stop streaming | The container exited. The stream ends naturally when the process stops. |
+| Container actions return 403 | `POST=1` is missing from your docker-socket-proxy configuration — see [Container Actions](#container-actions). |
 | TLS errors | Certificate paths must be absolute paths accessible from inside the HA container. |
 
 ---
