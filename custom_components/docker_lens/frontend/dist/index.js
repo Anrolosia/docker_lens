@@ -272,8 +272,6 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       padding: 0 16px;
       background-color: var(--app-header-background-color, var(--primary-color));
       color: var(--app-header-text-color, var(--text-primary-color));
-      box-shadow: var(--app-header-shadow, 0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12));
-      box-sizing: border-box;
       z-index: 2;
     `,this._menuBtn=document.createElement("ha-menu-button"),this._menuBtn.hass=this._hass,this._menuBtn.narrow=this._narrow,t.appendChild(this._menuBtn);const n=document.createElement("div");n.textContent="Docker Lens",n.style.cssText=`
       margin-left: 24px; 
