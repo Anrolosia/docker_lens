@@ -64,3 +64,20 @@ export const subscribeToStats = (connection, containerId, onStats) => {
     container_id: containerId,
   });
 };
+
+/**
+ * Check if a container's image has an update available.
+ * @param {object} connection The Home Assistant WebSocket connection object.
+ * @param {string} containerId The ID of the container to check.
+ * @returns {Promise<object>} A promise that resolves to { status: "up-to-date" | "update-available" | "unknown" }
+ */
+export const checkImageUpdateStatus = (connection, containerId, imageName) => {
+  if (!connection) {
+    return Promise.reject(new Error('WebSocket connection not available.'));
+  }
+  return connection.sendMessagePromise({
+    type: 'docker_lens/image/update-status',
+    container_id: containerId,
+    image_name: imageName || '',
+  });
+};

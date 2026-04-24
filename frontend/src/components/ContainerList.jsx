@@ -30,7 +30,7 @@ import {
   Stop as StopIcon,
   Refresh as RestartIcon,
 } from '@mui/icons-material';
-import { containerAction } from '../api/websocket';
+import { containerAction, checkImageUpdateStatus } from '../api/websocket';
 
 const getStatusColor = (state) => {
   const s = state?.toLowerCase() ?? 'unknown';
@@ -49,6 +49,65 @@ const StatusChip = ({ state }) => (
   />
 );
 StatusChip.propTypes = { state: PropTypes.string };
+
+// ── Image update status chip ─────────────────────────────────────────────────
+const ImageStatusChip = ({ container, connection }) => {
+  const [status, setStatus] = useState(null); // null = loading, "up-to-date", "update-available", "unknown"
+
+  React.useEffect(() => {
+    if (!connection || !container?.id) return;
+
+    const fetchStatus = async () => {
+      try {
+        const result = await checkImageUpdateStatus(connection, container.id, container.image);
+        setStatus(result.status);
+      } catch (err) {
+        console.error('Failed to check image update status:', err);
+        setStatus('unknown');
+      }
+    };
+
+    fetchStatus();
+  }, [container?.id, container?.image, connection]);
+
+  if (status === null) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', ml: 1, flexShrink: 0 }}>
+        <CircularProgress size={16} />
+      </Box>
+    );
+  }
+
+  if (status === 'unknown') {
+    return (
+      <Chip
+        label="-"
+        color="default"
+        size="small"
+        variant="outlined"
+        sx={{ ml: 1, flexShrink: 0 }}
+      />
+    );
+  }
+
+  const isUpdateAvailable = status === 'update-available';
+  const label = isUpdateAvailable ? 'update' : 'up-to-date';
+  const color = isUpdateAvailable ? 'warning' : 'success';
+
+  return (
+    <Chip
+      label={label}
+      color={color}
+      size="small"
+      variant={isUpdateAvailable ? 'filled' : 'outlined'}
+      sx={{ ml: 1, flexShrink: 0 }}
+    />
+  );
+};
+ImageStatusChip.propTypes = {
+  container: PropTypes.object.isRequired,
+  connection: PropTypes.object,
+};
 
 // ── Container action menu ────────────────────────────────────────────────────
 const ContainerActions = ({ container, connection, onRefresh }) => {
@@ -305,6 +364,7 @@ export const ContainerList = ({
                             primary={container.name}
                             primaryTypographyProps={{ noWrap: true }}
                           />
+                          <ImageStatusChip container={container} connection={connection} />
                           <StatusChip state={container.state} />
                           {connection && (
                             <ContainerActions

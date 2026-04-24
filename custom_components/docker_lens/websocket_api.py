@@ -29,6 +29,7 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_subscribe_logs)
     websocket_api.async_register_command(hass, ws_container_action)
     websocket_api.async_register_command(hass, ws_container_stats)
+    websocket_api.async_register_command(hass, ws_image_update_status)
 
 
 def _get_api(hass: HomeAssistant) -> DockerAPI | None:
@@ -187,3 +188,35 @@ async def ws_container_stats(
 
     connection.subscriptions[msg["id"]] = _cleanup
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/image/update-status",
+        vol.Required("container_id"): cv.string,
+        vol.Optional("image_name", default=""): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_image_update_status(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Check if a container's image has an update available."""
+    if (api := _get_api(hass)) is None:
+        connection.send_error(msg["id"], "not_setup", "Integration not set up.")
+        return
+
+    try:
+        result = await api.get_image_update_status(
+            msg["container_id"], msg.get("image_name") or None
+        )
+    except Exception:
+        _LOGGER.exception("Error checking image update status")
+        connection.send_error(
+            msg["id"], "status_error", "Failed to check image status."
+        )
+        return
+
+    connection.send_result(msg["id"], result)
