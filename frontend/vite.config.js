@@ -22,7 +22,7 @@ export default defineConfig({
   build: {
     outDir: '../custom_components/docker_lens/frontend/dist',
     emptyOutDir: true,
-    manifest: "vite.manifest.json",
+    manifest: false,
     rollupOptions: {
       output: {
         entryFileNames: '[name].js',

@@ -35,4 +35,4 @@ frontend/.vite/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbcustom_components/docker_lens/frontend/dist/vite.manifest.json
