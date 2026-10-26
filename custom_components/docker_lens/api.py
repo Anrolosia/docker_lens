@@ -361,7 +361,12 @@ class DockerAPI:
                 ml_hdrs["Authorization"] = f"Bearer {token}"
                 v2_hdrs["Authorization"] = f"Bearer {token}"
             result = await _head_manifest_with_auth(
-                session, url, ml_hdrs, v2_hdrs, client_timeout, is_docker_hub
+                session,
+                url,
+                ml_hdrs,
+                v2_hdrs,
+                client_timeout=client_timeout,
+                is_docker_hub=is_docker_hub,
             )
         except (TimeoutError, aiohttp.ClientError):
             return None
@@ -507,6 +512,7 @@ async def _head_manifest_with_auth(
     url: str,
     ml_hdrs: dict[str, str],
     v2_hdrs: dict[str, str],
+    *,
     client_timeout: aiohttp.ClientTimeout,
     is_docker_hub: bool,
 ) -> str | None:

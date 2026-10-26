@@ -17,9 +17,15 @@
       "pinDigests": false
     },
     {
-      "description": "Keep the test dependency bumps together in a single PR.",
+      "description": "Keep the test and lint dependency bumps together in a single PR.",
       "matchManagers": ["pip_requirements"],
       "groupName": "python dependencies"
+    },
+    {
+      "description": "docker is pinned in both manifest.json and requirements_test.txt; bump them together.",
+      "matchManagers": ["homeassistant-manifest", "pip_requirements"],
+      "matchPackageNames": ["docker"],
+      "groupName": "docker"
     },
     {
       "description": "Keep the frontend dependency bumps together in a single PR, majors stay separate.",
@@ -31,12 +37,6 @@
       "description": "Keep the dev container image bumps together in a single PR.",
       "matchManagers": ["docker-compose"],
       "groupName": "dev container images"
-    },
-    {
-      "description": "josepy is held below 2.0 on purpose in requirements_test.txt.",
-      "matchManagers": ["pip_requirements"],
-      "matchPackageNames": ["josepy"],
-      "allowedVersions": "<2.0"
     },
     {
       "description": "Python follows the version Home Assistant runs on. Revisit when HA moves to 3.15.",

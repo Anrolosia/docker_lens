@@ -25,10 +25,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install tooling
-        run: pip install check-jsonschema
+        run: pip install -r requirements_lint.txt
 
       - name: Validate renovate.json
         run: check-jsonschema --builtin-schema vendor.renovate --regex-variant nonunicode renovate.json
