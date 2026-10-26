@@ -34,6 +34,12 @@
       "groupName": "frontend dependencies"
     },
     {
+      "description": "@vitejs/plugin-react majors require the matching vite major; bump them together.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite", "@vitejs/plugin-react"],
+      "groupName": "vite"
+    },
+    {
       "description": "Keep the dev container image bumps together in a single PR.",
       "matchManagers": ["docker-compose"],
       "groupName": "dev container images"
