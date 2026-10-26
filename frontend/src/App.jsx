@@ -145,7 +145,7 @@ export function App({ connection }) {
   if (containersError) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <Typography color="error">{containersError}</Typography>
+        <Typography sx={{ color: 'error.main' }}>{containersError}</Typography>
       </Box>
     );
   }

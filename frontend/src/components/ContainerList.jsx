@@ -227,7 +227,15 @@ export const ContainerList = ({
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={2}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          p: 2,
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -235,8 +243,8 @@ export const ContainerList = ({
 
   if (Object.keys(containers ?? {}).length === 0) {
     return (
-      <Box p={2}>
-        <Typography variant="body1" color="text.secondary">
+      <Box sx={{ p: 2 }}>
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
           No containers found.
         </Typography>
       </Box>
@@ -253,19 +261,21 @@ export const ContainerList = ({
           fullWidth
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
-              </InputAdornment>
-            ),
-            endAdornment: search && (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setSearch('')} edge="end" size="small">
-                  <ClearIcon sx={{ fontSize: '1rem' }} />
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: search && (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setSearch('')} edge="end" size="small">
+                    <ClearIcon sx={{ fontSize: '1rem' }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
       </Box>
@@ -273,8 +283,8 @@ export const ContainerList = ({
       {/* List */}
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         {Object.keys(filteredContainers).length === 0 ? (
-          <Box p={2}>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               No containers match &ldquo;{search}&rdquo;.
             </Typography>
           </Box>
@@ -362,7 +372,7 @@ export const ContainerList = ({
                           </ListItemIcon>
                           <ListItemText
                             primary={container.name}
-                            primaryTypographyProps={{ noWrap: true }}
+                            slotProps={{ primary: { noWrap: true } }}
                           />
                           <ImageStatusChip container={container} connection={connection} />
                           <StatusChip state={container.state} />

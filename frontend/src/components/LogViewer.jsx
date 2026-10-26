@@ -597,7 +597,7 @@ const LogViewer = ({ logs, containerName, filterText, onFilterChange, onClearLog
         <Typography variant="h6" component="h2" noWrap sx={{ minWidth: '150px' }}>
           {containerName || '—'}
         </Typography>
-        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: '280px' }} gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: '280px', gap: 1 }}>
           <TextField
             placeholder="Filter logs (regex)"
             variant="outlined"
@@ -605,19 +605,21 @@ const LogViewer = ({ logs, containerName, filterText, onFilterChange, onClearLog
             fullWidth
             value={filterText}
             onChange={(e) => onFilterChange(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: '1rem' }} />
-                </InputAdornment>
-              ),
-              endAdornment: filterText && (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => onFilterChange('')} edge="end" size="small">
-                    <ClearIcon sx={{ fontSize: '1rem' }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: '1rem' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: filterText && (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => onFilterChange('')} edge="end" size="small">
+                      <ClearIcon sx={{ fontSize: '1rem' }} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
           <Tooltip
