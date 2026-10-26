@@ -13,7 +13,7 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Anrolosia/docker_lens/issues",
   "requirements": [
-    "docker==7.1.0"
+    "docker==7.2.0"
   ],
   "version": "1.2.2"
 }
