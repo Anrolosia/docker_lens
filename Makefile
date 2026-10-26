@@ -52,7 +52,7 @@ help:
 install:
 	@echo "--- Installing Python dependencies"
 	pip install -r requirements_test.txt
-	pip install ruff
+	pip install -r requirements_lint.txt
 	@echo "--- Installing Node dependencies"
 	cd $(FRONTEND) && npm install
 	@echo "Done."

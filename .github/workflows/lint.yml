@@ -14,10 +14,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install -r requirements_lint.txt
 
       - name: Run ruff check
         run: ruff check custom_components/
