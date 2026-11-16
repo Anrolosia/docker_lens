@@ -139,8 +139,12 @@ print('Bumped to ' + m['version'])"
 
 # ── Release ──────────────────────────────────────────────────
 
+.PHONY: check-main
+check-main:
+	@test "$$(git rev-parse --abbrev-ref HEAD)" = main || { echo "Error: releases must be made from main."; exit 1; }
+
 .PHONY: release
-release: lint bump-patch
+release: check-main lint bump-patch
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
 	git add $(MANIFEST)
@@ -150,7 +154,7 @@ release: lint bump-patch
 	@echo "Released v$(VER)"
 
 .PHONY: release-minor
-release-minor: lint bump-minor
+release-minor: check-main lint bump-minor
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
 	git add $(MANIFEST)
@@ -160,7 +164,7 @@ release-minor: lint bump-minor
 	@echo "Released v$(VER)"
 
 .PHONY: release-major
-release-major: lint bump-major
+release-major: check-main lint bump-major
 	$(eval VER := $(shell python3 -c "import json; print(json.load(open('$(MANIFEST)'))['version'])"))
 	@echo "--- Releasing v$(VER)"
 	git add $(MANIFEST)
